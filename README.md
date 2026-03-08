@@ -751,3 +751,160 @@ public class Robot implements Workable {
 ### Summary
 - ISP is about ensuring that no client is forced to depend on methods it does not use.
 - Adhering to ISP leads to a more flexible and maintainable codebase.
+
+## **Dependency Inversion Principle (DIP)**
+- **Definition:** High-level modules should not depend on low-level modules. Both should depend on abstractions (e.g., interfaces).
+- Abstractions should not depend on details. Details (concrete implementations) should depend on abstractions.
+- This reduces the coupling between different parts of the code and makes it more flexible and easier to maintain.
+
+### Key points of DIP
+- High-level modules = business logic
+  - Examples: `OrderService`, `PaymentService`, `EmployeeService`
+  - These should not depend directly on concrete classes.
+- Low-level modules = implementation details
+  - Examples: Database access, HTTP clients, File system, Email services
+  - These should depend on interfaces.
+- Use abstractions (interfaces)
+  - DIP typically uses: Interfaces, Dependency Injection, Inversion of Control (IoC)
+  - This is exactly what Spring Framework does automatically.
+
+### Why DIP Matters
+- Reduces the coupling between different parts of the code.
+- Increases the flexibility and reusability of the code.
+- Makes the code easier to test and maintain.
+
+### Common DIP Violations
+- High-level modules depending directly on low-level modules.
+- Not using interfaces or abstract classes to define contracts between modules.
+- Tight coupling between classes, making it difficult to change or replace them.
+
+#### Example: DIP Violation
+```java
+public class LightBulb {
+    public void turnOn() { /* ... */ }
+    public void turnOff() { /* ... */ }
+}
+
+public class Switch {
+    private LightBulb bulb;
+
+    public Switch(LightBulb bulb) {
+        this.bulb = bulb;
+    }
+
+    public void operate(String command) {
+        if (command.equals("on")) {
+            bulb.turnOn();
+        } else if (command.equals("off")) {
+            bulb.turnOff();
+        }
+    }
+}
+```
+- `Switch` is a high-level module that directly depends on the low-level module `LightBulb`.
+- This violates DIP.
+
+#### Fix: DIP Compliant Design
+```java
+public interface Switchable {
+    void turnOn();
+    void turnOff();
+}
+
+public class LightBulb implements Switchable {
+    public void turnOn() { /* ... */ }
+    public void turnOff() { /* ... */ }
+}
+
+public class Fan implements Switchable {
+    public void turnOn() { /* ... */ }
+    public void turnOff() { /* ... */ }
+}
+
+public class Switch {
+    private Switchable device;
+
+    public Switch(Switchable device) {
+        this.device = device;
+    }
+
+    public void operate(String command) {
+        if (command.equals("on")) {
+            device.turnOn();
+        } else if (command.equals("off")) {
+            device.turnOff();
+        }
+    }
+}
+```
+- `Switch` now depends on the `Switchable` interface, not on the concrete implementations of `LightBulb` or `Fan`.
+- This adheres to DIP: high-level modules depend on abstractions, not on low-level modules.
+
+#### Example: another DIP violation (Bad Design)
+```java
+public class NotificationService {
+
+    private EmailService emailService = new EmailService();
+
+    public void send(String message) {
+        emailService.sendEmail(message);
+    }
+}
+```
+- `NotificationService` directly depends on EmailService.
+- If tomorrow you want:
+  - SMS notifications
+  - Push notifications
+  - Slack notifications
+- You must modify the class.
+
+#### Fix using Abstraction
+```java
+// Step 1 : Create interface
+public interface MessageService {
+    void send(String message);
+}
+
+// Step 2 : Implementation
+public class EmailService implements MessageService {
+
+    public void send(String message) {
+        System.out.println("Sending Email");
+    }
+}
+
+// Step 3 : High level module depends on interface
+public class NotificationService {
+
+    private MessageService messageService;
+
+    public NotificationService(MessageService messageService) {
+        this.messageService = messageService;
+    }
+
+    public void send(String message) {
+        messageService.send(message);
+    }
+}
+```
+- Now `NotificationService` depends on abstraction, not implementation.
+
+### Signs of DIP violation
+- `new` keyword inside business classes: `EmailService email = new EmailService();`
+- Direct dependency on concrete classes
+  - MySqlRepository
+  - FileLogger
+  - StripeGateway
+- Difficult unit testing.
+- Tight coupling between layers
+  - `Controller → Concrete Service → Concrete Repository`
+
+### Best Practices for DIP
+- Use interfaces or abstract classes to define contracts between high-level and low-level modules.
+- Ensure that high-level modules do not depend directly on low-level modules.
+- Favor composition over inheritance to achieve code reuse.
+- Use design patterns like Dependency Injection, Inversion of Control, and Service Locator to manage dependencies.
+
+### Summary
+- DIP is about reducing the coupling between different parts of the code by depending on abstractions, not on concrete implementations.
+- Adhering to DIP leads to a more flexible, reusable, and maintainable codebase.
