@@ -509,3 +509,148 @@ PushNotificationService
 - OCP helps build robust, maintainable, and scalable systems.
 - Design for extension, not modification.
 - Refactor code that requires frequent changes to support OCP.
+
+## **Liskov Substitution Principle (LSP)**
+- **Definition:** Objects of a superclass shall be replaceable with objects of a subclass without affecting the correctness of the program.
+- Subtypes must be substitutable for their base types.
+- Derived classes must extend the base classes without changing their behavior.
+
+- Simple Meaning
+  - If B extends A, then:
+  - `A obj = new B();` should work without any issues.
+- If the subclass changes expected behavior → LSP violation.
+
+### Key points of LSP
+- Subclass should not break parent behavior.
+  - Example contract:
+  - `withdraw(amount)`
+  - Expected behavior: withdraw money, reduce balance
+  - If subclass changes this behavior → violation.
+- Subclass should not throw new unexpected exceptions
+  - If parent method allows operation but subclass throws error → violation.
+- Subclass should not strengthen preconditions
+  - Meaning:
+  - Parent allows: `withdraw(amount)`
+  - Subclass should not require: `withdraw(amount > 1000 only)`
+- Subclass should not weaken postconditions
+  - Example:
+  - Parent guarantees: deposit increases balance
+  - Subclass must guarantee the same.
+
+### Why LSP Matters
+- Ensures that a subclass can stand in for its superclass.
+- Guarantees the behavior of the program remains consistent when switching between base and derived classes.
+- Promotes the use of abstract classes and interfaces.
+
+### Common LSP Violations
+- Overriding methods in a subclass that change the expected behavior of the method in the superclass.
+- Failing to implement inherited abstract methods.
+- Introducing new restrictions in the subclass that are not present in the superclass.
+
+#### Example: LSP Violation
+```java
+public class Bird {
+    public void fly() { /* ... */ }
+}
+
+public class Ostrich extends Bird {
+    public void fly() {
+        throw new UnsupportedOperationException("Ostriches can't fly");
+    }
+}
+```
+- `Ostrich` is a subclass of `Bird`, but it cannot be used interchangeably with `Bird` without breaking the code.
+- This violates LSP.
+
+#### Fix: LSP Compliant Design
+```java
+public abstract class Bird {
+    public abstract void move();
+}
+
+public class Sparrow extends Bird {
+    public void move() { /* fly */ }
+}
+
+public class Ostrich extends Bird {
+    public void move() { /* run */ }
+}
+```
+- Both `Sparrow` and `Ostrich` extend `Bird` and provide their own implementation of `move()`.
+- The behavior of the program remains consistent, and the subclasses can be used interchangeably with the base class.
+
+#### Example: another Bad design
+```java
+public class Rectangle {
+
+    protected int width;
+    protected int height;
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    public int getArea() {
+        return width * height;
+    }
+}
+
+public class Square extends Rectangle {
+
+    public void setWidth(int width) {
+        this.width = width;
+        this.height = width;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+        this.width = height;
+    }
+}
+```
+- Code using Rectangle
+```java
+public void test(Rectangle r) {
+    r.setWidth(5);
+    r.setHeight(10);
+
+    System.out.println(r.getArea());
+}
+```
+- Expected output : 50
+- But with Square
+```java
+Square s = new Square();
+test(s);
+```
+- Output becomes : 100
+- because width and height changed together, violates LSP.
+
+#### Fix: Use better abstraction
+```java
+public interface Shape {
+    int getArea();
+}
+
+public class Rectangle implements Shape {
+    // ...
+}
+
+public class Square implements Shape {
+    // ...
+}
+```
+
+### Best Practices for LSP
+- Design your classes so that they can be easily extended.
+- Ensure that subclasses do not alter the expected behavior of the superclass.
+- Use interfaces or abstract classes to define contracts for subclasses.
+- Favor composition over inheritance to achieve code reuse.
+
+### Summary
+- LSP is about ensuring that a subclass can replace a superclass without affecting the correctness of the program.
+- Adhering to LSP leads to a more robust and maintainable codebase.
