@@ -654,3 +654,100 @@ public class Square implements Shape {
 ### Summary
 - LSP is about ensuring that a subclass can replace a superclass without affecting the correctness of the program.
 - Adhering to LSP leads to a more robust and maintainable codebase.
+
+## **Interface Segregation Principle (ISP)**
+- **Definition:** No client should be forced to depend on methods it does not use.
+- Interfaces should be client-specific rather than one general-purpose interface.
+- This prevents a situation where a class is implementing an interface but not using all of its methods.
+
+### Key points of ISP
+- Prefer small, focused interfaces
+  - Interfaces should represent specific capabilities.
+  - Bad: `Machine`
+  - Good: `Printer`, `Scanner`, `FaxMachine`
+- Classes should not implement unused methods
+  - If a class must implement methods that it does not need, the interface design is wrong.
+- Avoid “fat interfaces”
+  - A fat interface has many unrelated methods.
+  - Example: `EmployeeOperations`
+  - Containing:
+    - payroll
+    - leave
+    - promotion
+    - recruitment
+    - training
+  - These should likely be separate.
+
+### Why ISP Matters
+- Promotes the use of smaller, more specific interfaces.
+- Reduces the impact of changes in the code.
+- Increases the flexibility and reusability of the code.
+
+### Common ISP Violations
+- Creating large interfaces with many methods.
+- Forcing classes to implement methods they do not need.
+- Not using interfaces at all, leading to tight coupling between classes.
+
+#### Example: ISP Violation
+```java
+public interface Worker {
+    void work();
+    void eat();
+}
+
+public class Human implements Worker {
+    public void work() { /* ... */ }
+    public void eat() { /* ... */ }
+}
+
+public class Robot implements Worker {
+    public void work() { /* ... */ }
+    public void eat() {
+        throw new UnsupportedOperationException("Robots don't eat");
+    }
+}
+```
+- `Robot` is forced to implement the `eat()` method even though it does not need it.
+- This violates ISP.
+
+#### Fix: ISP Compliant Design
+```java
+public interface Workable {
+    void work();
+}
+
+public interface Eatable {
+    void eat();
+}
+
+public class Human implements Workable, Eatable {
+    public void work() { /* ... */ }
+    public void eat() { /* ... */ }
+}
+
+public class Robot implements Workable {
+    public void work() { /* ... */ }
+}
+```
+- `Human` implements both `Workable` and `Eatable` interfaces.
+- `Robot` only implements the `Workable` interface.
+- No unnecessary methods are present in the classes, and each class only implements the methods it needs.
+
+### Signs of ISP Violation
+- Interfaces with too many methods.
+- `UnsupportedOperationException`
+  - `throw new UnsupportedOperationException();`
+- Empty implementations
+  - `public void eat() { }` in `Robot` class
+- Classes implementing unrelated functionality.
+- These are clear indicators that the interface is not properly segregated.
+
+### Best Practices for ISP
+- Use small, specific interfaces instead of large, general-purpose ones.
+- Ensure that classes only implement methods that are relevant to them.
+- Favor composition over inheritance to achieve code reuse.
+- Use design patterns like Adapter and Facade to provide a simplified interface to a complex subsystem.
+
+### Summary
+- ISP is about ensuring that no client is forced to depend on methods it does not use.
+- Adhering to ISP leads to a more flexible and maintainable codebase.
