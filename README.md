@@ -277,3 +277,235 @@ public class PaymentOrchestrator {
     }
 }
 ```
+
+## **Open Closed Principle (OCP)**
+- **Definition:** Software entities (classes, modules, functions) should be open for extension, but closed for modification.
+- You should be able to add new functionality without changing existing code.
+- This helps prevent breaking existing features and makes code easier to maintain.
+- Avoid modifying existing tested code.
+- Changing existing code can:
+  - introduce bugs
+  - break other features
+  - require regression testing
+- Use abstraction
+- OCP usually works through:
+  - Interfaces
+  - Abstract classes
+  - Polymorphism
+  - Strategy pattern
+  - Dependency injection
+- These allow new implementations without touching old code.
+
+### Why OCP Matters
+- Enables safe evolution of code as requirements change.
+- Reduces risk of regression bugs.
+- Makes code more reusable and testable.
+- Encourages modular, loosely coupled design.
+
+### Common OCP Violations
+- Modifying existing classes to add new behavior instead of extending them.
+- Using large switch/case or if/else blocks to handle new types or operations.
+- Not leveraging abstraction (interfaces, abstract classes) for extensibility.
+
+#### Example: OCP Violation
+```java
+public class PaymentProcessor {
+    public void process(String paymentType) {
+        if (paymentType.equals("credit")) {
+            // process credit card
+        } else if (paymentType.equals("paypal")) {
+            // process PayPal
+        } else if (paymentType.equals("crypto")) {
+            // process crypto
+        }
+    }
+}
+```
+- Every time a new payment type is added, this class must be modified.
+- This violates OCP: the class is not closed for modification.
+
+#### Fix: OCP Compliant Design
+```java
+public interface PaymentStrategy {
+    void process();
+}
+
+public class CreditCardPayment implements PaymentStrategy {
+    public void process() { /* ... */ }
+}
+
+public class PayPalPayment implements PaymentStrategy {
+    public void process() { /* ... */ }
+}
+
+public class CryptoPayment implements PaymentStrategy {
+    public void process() { /* ... */ }
+}
+
+public class PaymentProcessor {
+    private PaymentStrategy paymentStrategy;
+    public PaymentProcessor(PaymentStrategy paymentStrategy) {
+        this.paymentStrategy = paymentStrategy;
+    }
+    public void process() {
+        paymentStrategy.process();
+    }
+}
+```
+- New payment types can be added by creating new classes implementing `PaymentStrategy`.
+- No changes needed in `PaymentProcessor`.
+
+#### Example: OCP Violation: Logging
+```java
+public class LoggerService {
+
+    public void log(String type, String message) {
+
+        if(type.equals("FILE")) {
+            logToFile(message);
+        }
+        else if(type.equals("DB")) {
+            logToDatabase(message);
+        }
+    }
+}
+```
+- Adding `KAFKA` logging requires modifying this class.
+
+#### Fix: Better logging configuration using OCP
+```java
+public interface Logger {
+    void log(String message);
+}
+
+public class FileLogger implements Logger {
+    public void log(String message) {}
+}
+
+public class DatabaseLogger implements Logger {
+    public void log(String message) {}
+}
+
+public class LoggerService {
+    public void log(Logger logger, String message) {
+        logger.log(message);
+    }
+}
+```
+- Adding `KAFKA` logger:
+```java
+public class KafkaLogger implements Logger {
+    // ...
+}
+```
+
+#### OCP Violation in REST Controllers
+- Bad example: controller containing business logic
+```java
+@RestController
+@RequestMapping("/payments")
+public class PaymentController {
+
+    @PostMapping
+    public ResponseEntity<String> processPayment(@RequestBody PaymentRequest request) {
+
+        if ("CARD".equals(request.getType())) {
+            // card logic
+            processCard(request);
+        } 
+        else if ("UPI".equals(request.getType())) {
+            processUpi(request);
+        } 
+        else if ("NETBANKING".equals(request.getType())) {
+            processNetbanking(request);
+        }
+
+        return ResponseEntity.ok("Payment processed");
+    }
+}
+```
+
+#### Fix using Stragegy pattern
+```java
+// Step 1 : Abstraction
+public interface PaymentProcessor {
+    void process(PaymentRequest request);
+}
+
+// Step 2 : Implement processors
+@Component
+public class CardPaymentProcessor implements PaymentProcessor {
+    public void process(PaymentRequest request) {
+        // card payment logic
+    }
+}
+
+@Component
+public class UpiPaymentProcessor implements PaymentProcessor {
+    public void process(PaymentRequest request) {
+        // upi payment logic
+    }
+}
+
+// Step 3 : Processor Resolver
+@Component
+public class PaymentProcessorFactory {
+
+    private Map<String, PaymentProcessor> processors;
+
+    public PaymentProcessorFactory(List<PaymentProcessor> processorList) {
+        processors = new HashMap<>();
+        processors.put("CARD", processorList.get(0));
+        processors.put("UPI", processorList.get(1));
+    }
+
+    public PaymentProcessor getProcessor(String type) {
+        return processors.get(type);
+    }
+}
+
+// Step 4 : Clean controller
+@RestController
+@RequestMapping("/payments")
+public class PaymentController {
+
+    private final PaymentProcessorFactory factory;
+
+    @PostMapping
+    public ResponseEntity<String> processPayment(@RequestBody PaymentRequest request) {
+
+        PaymentProcessor processor = factory.getProcessor(request.getType());
+        processor.process(request);
+
+        return ResponseEntity.ok("Payment processed");
+    }
+}
+```
+
+### OCP in Spring Boot
+- Spring naturally supports OCP through Dependency Injection.
+- Example:
+```java
+public interface NotificationService {
+    void send();
+}
+```
+- Implementations:
+```
+EmailNotificationService
+SmsNotificationService
+PushNotificationService
+```
+- Spring can inject the appropriate implementation.
+- The service using it doesn't need modification.
+
+### Best Practices for OCP
+- Use interfaces and abstract classes to define extension points.
+- Favor composition and delegation over inheritance.
+- Avoid modifying existing code for new requirements; extend instead.
+- Use design patterns like Strategy, Decorator, and Factory to support OCP.
+
+### Summary
+- OCP helps build robust, maintainable, and scalable systems.
+- Design for extension, not modification.
+- Refactor code that requires frequent changes to support OCP.
