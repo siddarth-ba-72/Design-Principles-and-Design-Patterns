@@ -1,4 +1,4 @@
-package design.patterns.structural.composite.mdoels;
+package design.patterns.structural.composite.models;
 
 public class Button implements UIComponent {
 

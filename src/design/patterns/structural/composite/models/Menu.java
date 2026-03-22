@@ -1,4 +1,4 @@
-package design.patterns.structural.composite.mdoels;
+package design.patterns.structural.composite.models;
 
 import java.util.ArrayList;
 import java.util.List;

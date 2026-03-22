@@ -1,8 +1,8 @@
 package design.patterns.structural.composite;
 
-import design.patterns.structural.composite.mdoels.Button;
-import design.patterns.structural.composite.mdoels.Menu;
-import design.patterns.structural.composite.mdoels.UIComponent;
+import design.patterns.structural.composite.models.Button;
+import design.patterns.structural.composite.models.Menu;
+import design.patterns.structural.composite.models.UIComponent;
 
 public class CompositeMain {
     public static void main(String[] args) {
